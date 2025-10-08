@@ -857,6 +857,35 @@ static int tls_engine_load_dynamic_generic(const char *pre[],
 		}
 		post += 2;
 	}
+
+	if (ENGINE_init(engine) != 1) {
+		wpa_printf(MSG_ERROR, "ENGINE: engine init failed "
+			   "(engine: %s) [%s]", id,
+			   ERR_error_string(ERR_get_error(), NULL));
+	}
+
+	 struct {
+			const void *password;
+			const char *prompt_info;
+		} key_cb = { "", NULL };
+
+		char* key = ENGINE_load_private_key(engine,
+							    "pkcs11:model=Rutoken%20ECP;manufacturer=Aktiv%20Co.;serial=42775b2d;token=Rutoken%20ECP%20%3Cno%20label%3E;id=%45",
+								NULL, &key_cb);
+
+		if(!key) 
+		{
+			unsigned long err = ERR_get_error();
+		wpa_printf(MSG_ERROR,
+				   "ENGINE: cannot load private key with id '%s' [%s]",
+				   key, ERR_error_string(err, NULL));
+		}
+		else
+		{
+			wpa_printf(MSG_ERROR,
+				   "ENGINE: private key loaded '%s'", key);
+		}
+				   
 	ENGINE_free(engine);
 
 	return 0;
@@ -923,7 +952,7 @@ static int tls_engine_load_dynamic_pkcs11(const char *pkcs11_so_path,
 			return -1;
 		}
 
-		wpa_printf(MSG_DEBUG, "ENGINE: Loading pkcs11 Engine from %s with module %s",
+		wpa_printf(MSG_DEBUG, "ENGINE: Loading pkcs11 Engine from HREN %s with module %s",
 			real_pkcs11_so_path, real_pkcs11_module_path);
 
 		post_cmd[1] = real_pkcs11_module_path;
